@@ -7,12 +7,14 @@ from qdrant_client.http import models
 
 from src.embeddings.visual_encoder import VisualEncoder
 from src.embeddings.text_encoder import TextEncoder
+from src.retrieval.reranker import TextReranker
 
 class VideoKISRetriever:
     def __init__(
         self,
         config_path: str = "configs/config.yaml",
-        qdrant_config_path: str = "configs/qdrant_config.yaml"
+        qdrant_config_path: str = "configs/qdrant_config.yaml",
+        models_config_path: str = "configs/models_config.yaml"
     ):
         # 1. Tải cấu hình
         with open(config_path, "r", encoding="utf-8") as f:
@@ -23,6 +25,9 @@ class VideoKISRetriever:
         self.retrieval_cfg = self.config.get("retrieval", {})
         self.top_k_visual = self.retrieval_cfg.get("top_k_visual", 20)
         self.top_k_transcript = self.retrieval_cfg.get("top_k_transcript", 20)
+
+        # Hệ số mở rộng pool size cho Reranker (Ví dụ: lấy 60 kết quả từ Qdrant để lọc lấy 20)
+        self.rerank_pool_multiplier = self.retrieval_cfg.get("rerank_pool_multiplier", 3)
 
         collections_cfg = self.qdrant_cfg.get("collections", {})
         self.visual_col = collections_cfg.get("visual_keyframes", {}).get("name", "visual_keyframes")
@@ -42,11 +47,14 @@ class VideoKISRetriever:
         print("[RETRIEVER] Đang nạp Text Encoder (BGE-M3) cho Hybrid Text Search...")
         self.text_encoder = TextEncoder()
 
-    def search_visual(self, query_text: str, top_k: int = 1) -> List[Dict[str, Any]]:
+        print("[RETRIEVER] Đang nạp Cross-Encoder (Reranker)...")
+        self.reranker = TextReranker(config_path=models_config_path)
+
+    def search_visual(self, query_text: str, retrieve_top_k: int = 30) -> List[Dict[str, Any]]:
         """
         Tìm kiếm khung hình video bằng câu truy vấn văn bản (Text-to-Image).
         """
-        k = top_k or self.top_k_visual
+        k = retrieve_top_k or self.top_k_visual
         # Mã hóa câu hỏi tiếng Việt sang không gian hình ảnh 1024d
         query_vector = self.visual_encoder.encode_text_query(query_text)
 
@@ -74,11 +82,11 @@ class VideoKISRetriever:
             })
         return formatted_results
     
-    def search_transcript(self, query_text: str, top_k: int = 1) -> List[Dict[str, Any]]:
+    def search_transcript(self, query_text: str, retrieve_top_k: int = 30) -> List[Dict[str, Any]]:
         """
         Tìm kiếm lời thoại video bằng Hybrid Search (Dense + Sparse SPLADE).
         """
-        k = top_k or self.top_k_transcript
+        k = retrieve_top_k or self.top_k_transcript
         
         # Mã hóa câu hỏi sang Dense (Semantic) và Sparse (Lexical/Keyword)
         query_vectors = self.text_encoder.encode_query(query_text)
@@ -121,20 +129,21 @@ class VideoKISRetriever:
                 "score": getattr(res, "score", 0.0),
                 "source": "transcript"
             })
+
+        if formatted_results:
+            formatted_results = self.reranker.rerank_transcripts(
+                query=query_text, 
+                hits=formatted_results, 
+                top_k=k
+            )
+            
         return formatted_results
 
-    def retrieve(self, query_text: str) -> Dict[str, List[Dict[str, Any]]]:
-        """
-        Thực hiện truy vấn song song trên cả 2 không gian.
-        """
-        print(f"\n[RETRIEVER] Đang xử lý truy vấn: '{query_text}'")
+    def retrieve(self, query_text: str, retrieve_top_k: int = 30) -> Dict[str, List[Dict[str, Any]]]:
+        print(f"\n[RETRIEVER] Đang xử lý truy vấn: '{query_text}' với độ sâu {retrieve_top_k}")
         
-        # Lưu ý: Ở môi trường production có thể dùng asyncio/Threading để chạy song song 2 hàm này.
-        # Ở đây chạy tuần tự để dễ debug và tránh OOM do model đẩy lên GPU cùng lúc.
-        visual_hits = self.search_visual(query_text)
-        transcript_hits = self.search_transcript(query_text)
-        
-        print(f" -> Đã lấy {len(visual_hits)} visual hits và {len(transcript_hits)} transcript hits.")
+        visual_hits = self.search_visual(query_text, retrieve_top_k=retrieve_top_k)
+        transcript_hits = self.search_transcript(query_text, retrieve_top_k=retrieve_top_k)
         
         return {
             "visual": visual_hits,

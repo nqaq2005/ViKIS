@@ -54,7 +54,6 @@ video-kis-project/
 │   ├── run_indexing.py          # Script chạy toàn bộ pipeline ingestion và đẩy vào Qdrant
 │   └── evaluate_kis.py          # Script tính toán metric đánh giá (HitRate@1, MRR)
 │
-├── tests/                       # Unit tests cho từng module
 ├── .env.example                 # Mẫu cấu hình môi trường (QDRANT_URL, API keys)
 ├── .gitignore                   # Loại trừ /data/raw_videos, /data/keyframes, .venv
 ├── requirements.txt             # Danh sách dependencies

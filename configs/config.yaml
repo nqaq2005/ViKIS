@@ -50,3 +50,9 @@ retrieval:
     enabled: true
     expansion_window_sec: 10.0 # Mở rộng vùng tìm kiếm để giải mã On-the-fly
     dense_fps: 10.0            # Tốc độ quét frame chi tiết trong RAM
+
+
+
+reranker:
+  model_id: "BAAI/bge-reranker-v2-m3"
+  max_length: 512

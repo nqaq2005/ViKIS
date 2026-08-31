@@ -18,3 +18,4 @@ pillow==11.0.0
 einops
 sentencepiece
 load-dotenv
+streamlit
