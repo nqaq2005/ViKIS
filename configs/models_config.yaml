@@ -1,0 +1,56 @@
+# ==========================================
+# VISUAL EMBEDDING MODEL
+# ==========================================
+visual_model:
+  model_id: "jinaai/jina-clip-v2"
+  device: "cuda"
+  dimension: 1024             # Hỗ trợ MRL: 1024, 512, 256
+  max_text_tokens: 8192       # Cho phép câu truy vấn mô tả dài
+  normalize: true
+  batch_size: 32
+
+# ==========================================
+# TEXT EMBEDDING MODEL (HYBRID)
+# ==========================================
+text_model:
+  model_id: "BAAI/bge-m3"
+  device: "cuda"
+  dimension: 1024
+  max_length: 8192
+  normalize: true
+  batch_size: 16
+  return_dense: true
+  return_sparse: true         # Sinh Sparse vector (SPLADE-like) để Hybrid Search
+
+# ==========================================
+# AUTOMATIC SPEECH RECOGNITION (ASR)
+# ==========================================
+asr_model:
+  model_id: "hynt/Zipformer-30M-RNNT-6000h"
+  backend: "sherpa-onnx"      # sherpa-onnx / pytorch
+  sample_rate: 16000
+  language: "vi"
+  device: "cpu"               # Model 30M rất nhẹ, tối ưu chạy trên CPU
+  enable_punctuator: true     # Khôi phục dấu câu tiếng Việt sau khi nhận diện
+
+# ==========================================
+# VIDEO OCR MODEL
+# ==========================================
+ocr_model:
+  engine: "easyocr"           # easyocr / paddleocr
+  languages: ["vi", "en"]
+  use_gpu: true
+
+# ==========================================
+# VISION-LANGUAGE GENERATOR (VLM / LLM)
+# ==========================================
+generator:
+  provider: "gemini"          # "gemini" hoặc "openai"
+  model_name: "gemini-1.5-flash"
+  temperature: 0.1
+  max_output_tokens: 1024
+  system_prompt: >
+    Bạn là trợ lý Video Known-Item Search chuyên nghiệp. 
+    Nhiệm vụ của bạn là xác định chính xác sự kiện diễn ra ở đâu, vào lúc nào dựa trên 
+    các khung hình (keyframes), mốc thời gian và phụ đề được cung cấp.
+    Luôn đính kèm mốc thời gian chính xác [t_start, t_end] và trích dẫn bằng chứng.

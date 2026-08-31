@@ -1,0 +1,60 @@
+# ==========================================
+# KẾT NỐI QDRANT
+# ==========================================
+connection:
+  url: "https://8df110ba-d9ff-4a31-8f1d-09eeacaec0d9.us-central1-0.gcp.cloud.qdrant.io"
+  api_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6YTBiNDU3YzMtYmJhZS00NGY1LTkwZTgtNWI0MzYwZjE2MTlhIn0.kpdV3zINDlrmznpIO3yfK9NMsB-7cTN90mVgQ3rkQaA"
+  timeout: 60
+
+# ==========================================
+# CẤU HÌNH INDEXING HNSW CHUNG
+# ==========================================
+hnsw_config:
+  m: 16
+  ef_construct: 100
+  full_scan_threshold: 1000
+  on_disk: false
+
+# ==========================================
+# SCHEMAS 2 COLLECTIONS
+# ==========================================
+collections:
+  # 1. Collection quản lý Keyframes & Thị giác
+  visual_keyframes:
+    name: "visual_keyframes"
+    vectors:
+      size: 1024
+      distance: "Cosine"
+      on_disk: false
+    payload_indexes:
+      - field_name: "video_id"
+        schema_type: "keyword"
+      - field_name: "scene_id"
+        schema_type: "integer"
+      - field_name: "timestamp"
+        schema_type: "float"
+      - field_name: "ocr_text"
+        schema_type: "text"
+        tokenizer: "multilingual"
+
+  # 2. Collection quản lý Lời thoại & Ngữ nghĩa
+  transcript_segments:
+    name: "transcript_segments"
+    vectors:
+      dense:
+        size: 1024
+        distance: "Cosine"
+        on_disk: false
+    sparse_vectors:
+      sparse:
+        on_disk: false
+    payload_indexes:
+      - field_name: "video_id"
+        schema_type: "keyword"
+      - field_name: "start_time"
+        schema_type: "float"
+      - field_name: "end_time"
+        schema_type: "float"
+      - field_name: "text"
+        schema_type: "text"
+        tokenizer: "multilingual"

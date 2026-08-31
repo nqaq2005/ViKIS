@@ -1,0 +1,61 @@
+video-kis-project/
+├── data/
+│   ├── raw_videos/              # Chứa các video gốc (.mp4, .mkv)
+│   ├── keyframes/               # Ảnh keyframe trích xuất (lưu theo {video_id}/shot_{id}_kf{idx}.jpg)
+│   ├── transcripts/             # File ASR transcript thô (.json / .vtt) từ Zipformer
+│   └── ocr_cache/               # Cache kết quả OCR dạng text/json theo frame
+│
+├── configs/
+│   ├── config.yaml              # Tham số chung (sample_rate, threshold, devices)
+│   ├── models_config.yaml       # Config load model: jina-clip-v2, bge-m3, Zipformer
+│   └── qdrant_config.yaml       # Config Qdrant (host, port, collections schema)
+│
+├── src/
+│   ├── __init__.py
+│   ├── ingestion/               # Pipeline tiền xử lý & trích xuất dữ liệu thô
+│   │   ├── __init__.py
+│   │   ├── scene_detector.py    # Phân đoạn shot bằng PySceneDetect (AdaptiveDetector)
+│   │   ├── keyframe_extractor.py# Trích xuất keyframe đa luồng (Decord + Laplacian + pHash)
+│   │   ├── asr_pipeline.py      # Speech-to-Text tiếng Việt qua hynt/Zipformer-30M-RNNT
+│   │   └── ocr_scanner.py       # Quét text trên keyframe (EasyOCR / PaddleOCR)
+│   │
+│   ├── embeddings/              # Sinh vector đại diện đa phương thức
+│   │   ├── __init__.py
+│   │   ├── visual_encoder.py    # Mã hóa ảnh/keyframe bằng jina-clip-v2 (Dense 1024d)
+│   │   └── text_encoder.py      # Mã hóa văn bản qua bge-m3 (Dense + Sparse SPLADE)
+│   │
+│   ├── storage/                 # Quản lý cơ sở dữ liệu vector
+│   │   ├── __init__.py
+│   │   ├── init_qdrant.py       # Khởi tạo 2 collections: visual_keyframes & transcript_segments
+│   │   └── qdrant_client.py     # Hàm batch upsert điểm dữ liệu và quản lý payload
+│   │
+│   ├── retrieval/               # Lõi tìm kiếm & Định vị mốc thời gian
+│   │   ├── __init__.py
+│   │   ├── hybrid_retriever.py  # Query song song: visual_keyframes + transcript_segments
+│   │   ├── temporal_fusion.py   # Hợp nhất điểm số và mốc thời gian (Temporal Alignment / RRF)
+│   │   ├── fine_decoder.py      # Quét mịn on-the-fly bằng Decord tại khoảng nghi vấn
+│   │   └── reranker.py          # Tái xếp hạng kết quả Top-K
+│   │
+│   ├── generation/              # Tích hợp LLM/VLM tạo sinh phản hồi
+│   │   ├── __init__.py
+│   │   ├── prompt_builder.py    # Đóng gói Prompt (Context, Keyframes, Timestamps, OCR)
+│   │   └── vlm_generator.py     # Gọi LLM/VLM sinh câu trả lời kèm Deep Link video
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       ├── time_utils.py        # Hàm chuyển đổi mốc giây (seconds) ↔ format hh:mm:ss
+│       └── logger.py            # Quản lý log pipeline
+│
+├── app/                         # Giao diện người dùng & API
+│   ├── api.py                   # FastAPI backend phục vụ search endpoint
+│   └── streamlit_app.py         # UI demo (nhập query tiếng Việt, xem keyframe, nhảy timestamp)
+│
+├── scripts/
+│   ├── run_indexing.py          # Script chạy toàn bộ pipeline ingestion và đẩy vào Qdrant
+│   └── evaluate_kis.py          # Script tính toán metric đánh giá (HitRate@1, MRR)
+│
+├── tests/                       # Unit tests cho từng module
+├── .env.example                 # Mẫu cấu hình môi trường (QDRANT_URL, API keys)
+├── .gitignore                   # Loại trừ /data/raw_videos, /data/keyframes, .venv
+├── requirements.txt             # Danh sách dependencies
+└── README.md                    # Tài liệu hướng dẫn thiết lập và chạy hệ thống
