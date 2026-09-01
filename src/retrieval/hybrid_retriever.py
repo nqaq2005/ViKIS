@@ -1,4 +1,3 @@
-import os
 import yaml
 from typing import List, Dict, Any
 
@@ -8,6 +7,7 @@ from qdrant_client.http import models
 from src.embeddings.visual_encoder import VisualEncoder
 from src.embeddings.text_encoder import TextEncoder
 from src.retrieval.reranker import TextReranker
+from src.utils.file_utils import getenv
 
 class VideoKISRetriever:
     def __init__(
@@ -23,19 +23,14 @@ class VideoKISRetriever:
             self.qdrant_cfg = yaml.safe_load(f)
 
         self.retrieval_cfg = self.config.get("retrieval", {})
-        self.top_k_visual = self.retrieval_cfg.get("top_k_visual", 20)
-        self.top_k_transcript = self.retrieval_cfg.get("top_k_transcript", 20)
-
-        # Hệ số mở rộng pool size cho Reranker (Ví dụ: lấy 60 kết quả từ Qdrant để lọc lấy 20)
-        self.rerank_pool_multiplier = self.retrieval_cfg.get("rerank_pool_multiplier", 3)
 
         collections_cfg = self.qdrant_cfg.get("collections", {})
         self.visual_col = collections_cfg.get("visual_keyframes", {}).get("name", "visual_keyframes")
         self.transcript_col = collections_cfg.get("transcript_segments", {}).get("name", "transcript_segments")
 
         # 2. Khởi tạo Qdrant Client
-        self.qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
-        self.qdrant_api_key = os.getenv("QDRANT_API_KEY", None)
+        self.qdrant_url = getenv("QDRANT_URL", "http://localhost:6333")
+        self.qdrant_api_key = getenv("QDRANT_API_KEY", None)
         
         self.client = QdrantClient(url=self.qdrant_url, api_key=self.qdrant_api_key)
 
@@ -49,11 +44,11 @@ class VideoKISRetriever:
         print("[RETRIEVER] Đang nạp Cross-Encoder (Reranker)...")
         self.reranker = TextReranker(config_path=models_config_path)
 
-    def search_visual(self, query_text: str, retrieve_top_k: int = 30) -> List[Dict[str, Any]]:
+    def search_visual(self, query_text: str, retrieve_top_k: int = 100) -> List[Dict[str, Any]]:
         """
         Tìm kiếm khung hình video bằng câu truy vấn văn bản (Text-to-Image).
         """
-        k = retrieve_top_k or self.top_k_visual
+        k = retrieve_top_k 
         # Mã hóa câu hỏi tiếng Việt sang không gian hình ảnh 1024d
         query_vector = self.visual_encoder.encode_text_query(query_text)
 
@@ -81,11 +76,11 @@ class VideoKISRetriever:
             })
         return formatted_results
     
-    def search_transcript(self, query_text: str, retrieve_top_k: int = 30) -> List[Dict[str, Any]]:
+    def search_transcript(self, query_text: str, retrieve_top_k: int = 100) -> List[Dict[str, Any]]:
         """
         Tìm kiếm lời thoại video bằng Hybrid Search (Dense + Sparse SPLADE).
         """
-        k = retrieve_top_k or self.top_k_transcript
+        k = retrieve_top_k 
         
         # Mã hóa câu hỏi sang Dense (Semantic) và Sparse (Lexical/Keyword)
         query_vectors = self.text_encoder.encode_query(query_text)
@@ -108,14 +103,15 @@ class VideoKISRetriever:
         ]
 
         # Thực thi tìm kiếm gộp (Reciprocal Rank Fusion (RRF) nội bộ của Qdrant)
-        results = self.client.query_points(
+        response = self.client.query_points(
             collection_name=self.transcript_col,
             prefetch=prefetch_queries,
             query=models.FusionQuery(fusion=models.Fusion.RRF),
             limit=k,
             with_payload=True
-        ).points
+        )
 
+        results = getattr(response, "points", None) or []
 
         formatted_results = []
         for res in results:
@@ -138,7 +134,8 @@ class VideoKISRetriever:
             
         return formatted_results
 
-    def retrieve(self, query_text: str, retrieve_top_k: int = 30) -> Dict[str, List[Dict[str, Any]]]:
+    def retrieve(self, query_text: str, retrieve_top_k: int = 100) -> Dict[str, List[Dict[str, Any]]]:
+
         print(f"\n[RETRIEVER] Đang xử lý truy vấn: '{query_text}' với độ sâu {retrieve_top_k}")
         
         visual_hits = self.search_visual(query_text, retrieve_top_k=retrieve_top_k)

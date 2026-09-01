@@ -22,7 +22,7 @@ class TextReranker:
         self.model.to(self.device)
         print("[RERANKER] Tải mô hình thành công!")
 
-    def rerank_transcripts(self, query: str, hits: List[Dict[str, Any]], top_k: int = None) -> List[Dict[str, Any]]:
+    def rerank_transcripts(self, query: str, hits: List[Dict[str, Any]], top_k: int = 4) -> List[Dict[str, Any]]:
         """
         Chấm điểm lại (Rerank) danh sách các transcript/lời thoại.
         Cross-Encoder sẽ chú ý (attention) chéo giữa từng từ trong Query và Text.

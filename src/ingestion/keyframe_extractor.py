@@ -8,7 +8,6 @@ from typing import List, Dict, Any, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from decord import VideoReader, cpu
 
-from src.utils.file_utils import ensure_dir
 from src.utils.time_utils import frame_to_seconds
 
 def _compute_frame_metrics(frame_rgb: np.ndarray) -> Tuple[float, float]:
@@ -30,7 +29,7 @@ def _process_video_worker(
 
     video_id = os.path.splitext(os.path.basename(video_path))[0]
     save_dir = os.path.join(output_dir, video_id)
-    ensure_dir(save_dir)
+    os.makedirs(save_dir, exist_ok=True)
 
     vr = VideoReader(video_path, ctx=cpu(0))
     fps = vr.get_avg_fps()
@@ -145,7 +144,7 @@ class KeyframeExtractor:
         self.kf_cfg = self.full_config.get("ingestion", {}).get("keyframe_extraction", {})
         self.output_dir = self.full_config.get("paths", {}).get("keyframes_dir", "data/keyframes")
         self.num_workers = self.full_config.get("system", {}).get("num_workers", 4)
-        ensure_dir(self.output_dir)
+        os.makedirs(self.output_dir, exist_ok=True)
 
     def extract_from_video(self, video_path: str, shots: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Xử lý đơn luồng cho 1 video."""

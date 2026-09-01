@@ -2,6 +2,7 @@ import os
 import yaml
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
+from src.utils.file_utils import getenv
 
 class QdrantInitializer:
     def __init__(self, config_path: str = "configs/qdrant_config.yaml"):
@@ -9,9 +10,10 @@ class QdrantInitializer:
             self.config = yaml.safe_load(f)
 
         
-        self.url = os.getenv("QDRANT_URL", "http://localhost:6333")
-        self.api_key = os.getenv("QDRANT_API_KEY", None)
-        self.timeout = int(os.getenv("QDRANT_TIMEOUT", 60))
+        self.url = getenv("QDRANT_URL", "http://localhost:6333")
+        self.api_key = getenv("QDRANT_API_KEY", None)
+        timeout_value = getenv("QDRANT_TIMEOUT", "60")
+        self.timeout = int(timeout_value) if timeout_value is not None else 60
 
         self.client = QdrantClient(
             url=self.url,

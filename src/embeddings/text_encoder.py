@@ -1,10 +1,12 @@
-import os
 import yaml
 import torch
 import numpy as np
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Mapping
 from FlagEmbedding import BGEM3FlagModel
+from src.utils.fix_bug_FlagEmbedding import fix_bug_FlagEmbedding
 
+fix_bug_FlagEmbedding()
+  
 class TextEncoder:
     def __init__(self, models_config_path: str = "configs/models_config.yaml"):
         with open(models_config_path, "r", encoding="utf-8") as f:
@@ -23,6 +25,18 @@ class TextEncoder:
             use_fp16="cuda" in self.device,
             device=self.device
         )
+
+    def _as_dense_vector(self, value: Any) -> np.ndarray:
+        """Ép dense vector thành numpy.ndarray trước khi normalize."""
+        return np.asarray(value, dtype=np.float32).reshape(-1)
+
+    def _as_lexical_weights(self, value: Any) -> Dict[str, float]:
+        """Ép sparse vector thành dict[str, float]."""
+        if value is None:
+            return {}
+        if isinstance(value, Mapping):
+            return {str(k): float(v) for k, v in value.items()}
+        return {str(k): float(v) for k, v in dict(value).items()}
 
     def _format_sparse_for_qdrant(self, lexical_weights: Dict[str, float]) -> Dict[str, List]:
         """
@@ -65,13 +79,13 @@ class TextEncoder:
 
         results = []
         for i in range(len(texts)):
-            d_vec = dense_vecs[i]
+            d_vec = self._as_dense_vector(dense_vecs[i])
             if self.normalize:
                 norm = np.linalg.norm(d_vec)
                 if norm > 0:
                     d_vec = d_vec / norm
 
-            s_vec = self._format_sparse_for_qdrant(sparse_vecs[i])
+            s_vec = self._format_sparse_for_qdrant(self._as_lexical_weights(sparse_vecs[i]))
 
             results.append({
                 "dense": d_vec.tolist(),
@@ -92,13 +106,13 @@ class TextEncoder:
             return_colbert_vecs=False
         )
 
-        d_vec = outputs["dense_vecs"][0]
+        d_vec = self._as_dense_vector(outputs["dense_vecs"][0])
         if self.normalize:
             norm = np.linalg.norm(d_vec)
             if norm > 0:
                 d_vec = d_vec / norm
 
-        s_vec = self._format_sparse_for_qdrant(outputs["lexical_weights"][0])
+        s_vec = self._format_sparse_for_qdrant(self._as_lexical_weights(outputs["lexical_weights"][0]))
 
         return {
             "dense": d_vec.tolist(),

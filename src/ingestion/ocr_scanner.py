@@ -51,7 +51,7 @@ class OCRScanner:
             # EasyOCR trả về dạng: [ (bbox, text, prob), ... ]
             results = self.reader.readtext(image_path)
             valid_words = [
-                text.strip().lower()
+                text.strip()
                 for (_, text, prob) in results
                 if prob >= self.min_confidence and len(text.strip()) > 1
             ]

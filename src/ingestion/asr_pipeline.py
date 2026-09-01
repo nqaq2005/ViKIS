@@ -39,7 +39,6 @@ class ASRPipeline:
         self.sample_rate = self.asr_cfg.get("sample_rate", 16000)
 
         # Cấu hình VAD (Silero VAD qua sherpa-onnx)
-        # Model này nằm ở GitHub Releases của k2-fsa/sherpa-onnx, KHÔNG phải HuggingFace Hub
         self.vad_cfg = self.models_config.get("vad_model", {})
         self.vad_filename = self.vad_cfg.get("filename", "silero_vad.onnx")
         self.vad_download_url = self.vad_cfg.get(

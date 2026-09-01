@@ -1,9 +1,8 @@
 import os
 import time
-from dotenv import load_dotenv
 import yaml
 
-from src.utils.file_utils import ensure_dir, get_all_videos
+from src.utils.file_utils import  get_all_videos
 from src.ingestion.scene_detector import SceneDetector
 from src.ingestion.keyframe_extractor import KeyframeExtractor
 from src.ingestion.asr_pipeline import ASRPipeline
@@ -14,8 +13,6 @@ from src.storage.init_qdrant import QdrantInitializer
 from src.storage.qdrant_client import VideoKISQdrantClient
 
 
-load_dotenv()
-
 
 def run_pipeline(recreate_db: bool = False):
     start_total_time = time.time()
@@ -25,7 +22,7 @@ def run_pipeline(recreate_db: bool = False):
         config = yaml.safe_load(f)
 
     raw_videos_dir = config.get("paths", {}).get("raw_videos_dir", "data/raw_videos")
-    ensure_dir(raw_videos_dir)
+    os.makedirs(raw_videos_dir, exist_ok=True)
     video_paths = get_all_videos(raw_videos_dir)
 
     if not video_paths:

@@ -14,7 +14,7 @@ def patched_get_model(
     model_name_or_path: str,
     trust_remote_code: bool = False,
     colbert_dim: int = -1,
-    cache_dir: str = None,
+    cache_dir: str | None = None,
     torch_dtype = None,
 ):
     cache_folder = os.getenv('HF_HUB_CACHE', None) if cache_dir is None else cache_dir

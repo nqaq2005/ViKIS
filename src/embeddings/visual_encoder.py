@@ -3,7 +3,7 @@ import yaml
 import torch
 import numpy as np
 from PIL import Image
-from typing import List, Union, Dict, Any, Optional
+from typing import List, Union
 from transformers import AutoModel
 
 class VisualEncoder:
