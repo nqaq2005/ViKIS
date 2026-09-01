@@ -6,7 +6,7 @@ import subprocess
 import urllib.request
 import urllib.error
 from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 import soundfile as sf
 import sherpa_onnx
@@ -25,7 +25,8 @@ class ASRPipeline:
     def __init__(
         self,
         config_path: str = "configs/config.yaml",
-        models_config_path: str = "configs/models_config.yaml"
+        models_config_path: str = "configs/models_config.yaml",
+        output_dir: str = ""
     ):
         # 1. Đọc cấu hình hệ thống và mô hình
         with open(config_path, "r", encoding="utf-8") as f:
@@ -50,7 +51,10 @@ class ASRPipeline:
         self.vad_min_speech_duration = self.vad_cfg.get("min_speech_duration", 0.25)
         self.vad_max_speech_duration = self.vad_cfg.get("max_speech_duration", 20.0)
 
-        self.transcripts_dir = self.config.get("paths", {}).get("transcripts_dir", "data/transcripts")
+        if output_dir != "":
+            self.transcripts_dir = output_dir
+        else:
+            self.transcripts_dir = self.config.get("paths", {}).get("transcripts_dir", "data/transcripts")
         os.makedirs(self.transcripts_dir, exist_ok=True)
 
         # 2. Chuẩn bị model weights và khởi tạo Recognizer + VAD
@@ -64,9 +68,9 @@ class ASRPipeline:
         self._ensure_vad_downloaded()
         self._init_vad()
 
-    # ------------------------------------------------------------------
+  
     # Tải & khởi tạo model ASR
-    # ------------------------------------------------------------------
+
     def _ensure_model_downloaded(self):
         """Tải ONNX weights và bpe.model, sau đó trích xuất tokens.txt."""
         required_files = [
@@ -177,9 +181,9 @@ class ASRPipeline:
         """Tạo instance VAD mới (mỗi lần transcribe dùng 1 instance sạch, tránh giữ state cũ)."""
         return sherpa_onnx.VoiceActivityDetector(self.vad_config, buffer_size_in_seconds=100)
 
-    # ------------------------------------------------------------------
+  
     # Trích audio bằng FFmpeg
-    # ------------------------------------------------------------------
+  
     def extract_audio(self, video_path: str, output_wav_path: str) -> bool:
         """Dùng FFmpeg tách audio từ video sang WAV Mono 16kHz."""
         cmd = [
@@ -197,9 +201,9 @@ class ASRPipeline:
             print(f"[ASR ERROR] Không thể tách âm thanh từ {video_path}: {e}")
             return False
 
-    # ------------------------------------------------------------------
+
     # Gom token thành câu (dùng cho fallback khi 1 đoạn VAD có timestamps chi tiết)
-    # ------------------------------------------------------------------
+
     def _segment_tokens(
         self,
         tokens: List[str],
@@ -258,9 +262,8 @@ class ASRPipeline:
 
         return segments
 
-    # ------------------------------------------------------------------
     # Decode audio dài bằng VAD (cắt nhỏ trước khi đưa vào offline recognizer)
-    # ------------------------------------------------------------------
+  
     def _transcribe_with_vad(self, audio_samples, sr: int) -> List[TranscriptSegment]:
         """
         Dùng Silero VAD để cắt audio dài thành các đoạn có tiếng nói,
@@ -329,9 +332,8 @@ class ASRPipeline:
 
         return segments
 
-    # ------------------------------------------------------------------
     # Hàm chính: transcribe video -> list transcript segments
-    # ------------------------------------------------------------------
+
     def transcribe(self, video_path: str, use_cache: bool = True) -> List[Dict[str, Any]]:
         """
         Trích xuất toàn bộ transcript có gắn timestamp của video.
@@ -384,13 +386,3 @@ class ASRPipeline:
 
         print(f"[ASR] Đã nhận diện {len(records)} segments từ '{video_id}' -> lưu vào {json_cache_path}")
         return records
-
-
-if __name__ == "__main__":
-    asr = ASRPipeline()
-    test_video = "data/raw_videos/sample.mp4"
-    if os.path.exists(test_video):
-        transcripts = asr.transcribe(test_video, use_cache=False)
-        print("\n--- Mẫu 3 câu thoại đầu tiên ---")
-        for item in transcripts[:3]:
-            print(f"[{item['start']}s -> {item['end']}s]: {item['text']}")

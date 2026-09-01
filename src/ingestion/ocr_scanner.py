@@ -1,27 +1,32 @@
 import os
 import json
 import yaml
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import easyocr
 
 class OCRScanner:
     def __init__(
         self,
         config_path: str = "configs/config.yaml",
-        models_config_path: str = "configs/models_config.yaml"
+        models_config_path: str = "configs/models_config.yaml",
+        output_dir: str = ""
     ):
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
         with open(models_config_path, "r", encoding="utf-8") as f:
             self.models_config = yaml.safe_load(f)
 
+        
         # Cấu hình OCR
         self.ocr_sys_cfg = self.config.get("ingestion", {}).get("ocr", {})
         self.ocr_model_cfg = self.models_config.get("ocr_model", {})
         
         self.enabled = self.ocr_sys_cfg.get("enabled", True)
         self.min_confidence = self.ocr_sys_cfg.get("min_confidence", 0.5)
-        self.cache_dir = self.config.get("paths", {}).get("ocr_cache_dir", "data/ocr_cache")
+        if output_dir != "":
+            self.cache_dir = output_dir
+        else:
+            self.cache_dir = self.config.get("paths", {}).get("ocr_cache_dir", "data/ocr_cache")
         os.makedirs(self.cache_dir, exist_ok=True)
 
         if self.enabled:
@@ -46,7 +51,7 @@ class OCRScanner:
             # EasyOCR trả về dạng: [ (bbox, text, prob), ... ]
             results = self.reader.readtext(image_path)
             valid_words = [
-                text.strip()
+                text.strip().lower()
                 for (_, text, prob) in results
                 if prob >= self.min_confidence and len(text.strip()) > 1
             ]
@@ -87,15 +92,3 @@ class OCRScanner:
 
         print(f"[OCR] Đã quét và lưu cache OCR cho video '{video_id}' ({len(keyframes)} frames)")
         return keyframes
-
-if __name__ == "__main__":
-    scanner = OCRScanner()
-    test_kf = [{
-        "video_id": "test_video",
-        "scene_id": 1,
-        "timestamp": 12.5,
-        "frame_path": "data/keyframes/sample/shot_0001_kf01.jpg"
-    }]
-    if os.path.exists(test_kf[0]["frame_path"]):
-        res = scanner.process_keyframes("sample", test_kf, use_cache=False)
-        print("Kết quả OCR:", res[0].get("ocr_text"))

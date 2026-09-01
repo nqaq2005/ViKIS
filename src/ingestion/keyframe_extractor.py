@@ -8,6 +8,9 @@ from typing import List, Dict, Any, Tuple
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from decord import VideoReader, cpu
 
+from src.utils.file_utils import ensure_dir
+from src.utils.time_utils import frame_to_seconds
+
 def _compute_frame_metrics(frame_rgb: np.ndarray) -> Tuple[float, float]:
     """Tính độ sắc nét (Laplacian) và độ sáng trung bình từ mảng RGB."""
     gray = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2GRAY)
@@ -27,7 +30,7 @@ def _process_video_worker(
 
     video_id = os.path.splitext(os.path.basename(video_path))[0]
     save_dir = os.path.join(output_dir, video_id)
-    os.makedirs(save_dir, exist_ok=True)
+    ensure_dir(save_dir)
 
     vr = VideoReader(video_path, ctx=cpu(0))
     fps = vr.get_avg_fps()
@@ -86,10 +89,11 @@ def _process_video_worker(
             frame_path = os.path.join(save_dir, frame_filename)
             Image.fromarray(frames[best_idx]).save(frame_path, quality=92)
 
+            frame_time = frame_to_seconds(frame_indices[best_idx], fps)
             extracted_records.append({
                 "video_id": video_id,
                 "scene_id": shot_id,
-                "timestamp": round(float(best_time), 2),
+                "timestamp": round(float(frame_time), 2),
                 "frame_path": frame_path,
                 "sharpness": round(max_sharpness, 2)
             })
@@ -118,10 +122,11 @@ def _process_video_worker(
                     frame_path = os.path.join(save_dir, frame_filename)
                     pil_img.save(frame_path, quality=92)
 
+                    frame_time = frame_to_seconds(frame_indices[i], fps)
                     extracted_records.append({
                         "video_id": video_id,
                         "scene_id": shot_id,
-                        "timestamp": round(float(sample_times[i]), 2),
+                        "timestamp": round(float(frame_time), 2),
                         "frame_path": frame_path,
                         "sharpness": round(sharpness, 2)
                     })
@@ -140,7 +145,7 @@ class KeyframeExtractor:
         self.kf_cfg = self.full_config.get("ingestion", {}).get("keyframe_extraction", {})
         self.output_dir = self.full_config.get("paths", {}).get("keyframes_dir", "data/keyframes")
         self.num_workers = self.full_config.get("system", {}).get("num_workers", 4)
-        os.makedirs(self.output_dir, exist_ok=True)
+        ensure_dir(self.output_dir)
 
     def extract_from_video(self, video_path: str, shots: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Xử lý đơn luồng cho 1 video."""

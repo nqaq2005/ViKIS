@@ -1,10 +1,9 @@
 import os
-import glob
 import time
+from dotenv import load_dotenv
 import yaml
-from typing import List
-from tqdm import tqdm
 
+from src.utils.file_utils import ensure_dir, get_all_videos
 from src.ingestion.scene_detector import SceneDetector
 from src.ingestion.keyframe_extractor import KeyframeExtractor
 from src.ingestion.asr_pipeline import ASRPipeline
@@ -14,14 +13,9 @@ from src.embeddings.text_encoder import TextEncoder
 from src.storage.init_qdrant import QdrantInitializer
 from src.storage.qdrant_client import VideoKISQdrantClient
 
-def get_video_files(raw_dir: str) -> List[str]:
-    """Tìm tất cả các file video hợp lệ trong thư mục raw_videos."""
-    extensions = ("*.mp4", "*.mkv", "*.avi", "*.mov", "*.webm")
-    video_files = []
-    for ext in extensions:
-        video_files.extend(glob.glob(os.path.join(raw_dir, ext)))
-        video_files.extend(glob.glob(os.path.join(raw_dir, ext.upper())))
-    return sorted(list(set(video_files)))
+
+load_dotenv()
+
 
 def run_pipeline(recreate_db: bool = False):
     start_total_time = time.time()
@@ -31,10 +25,11 @@ def run_pipeline(recreate_db: bool = False):
         config = yaml.safe_load(f)
 
     raw_videos_dir = config.get("paths", {}).get("raw_videos_dir", "data/raw_videos")
-    video_paths = get_video_files(raw_videos_dir)
+    ensure_dir(raw_videos_dir)
+    video_paths = get_all_videos(raw_videos_dir)
 
     if not video_paths:
-        print(f"[ABORT] Không tìm thấy video nào trong '{raw_videos_dir}'. Hãy thêm video .mp4/.mkv vào thư mục này.")
+        print(f"[ABORT] Không tìm thấy video nào trong '{raw_videos_dir}'. Hãy thêm video vào thư mục này.")
         return
 
     print(f"=== BẮT ĐẦU PIPELINE INDEXING ({len(video_paths)} VIDEOS) ===")
@@ -105,7 +100,7 @@ def run_pipeline(recreate_db: bool = False):
     print(f"\n=======================================================")
     print(f" TẤT CẢ DỮ LIỆU ĐÃ ĐƯỢC NẠP LÊN QDRANT THÀNH CÔNG!")
     print(f" Tổng thời gian chạy: {total_duration}s")
-    print(f"=======================================================")
+    print(f"=======================================================\n")
 
 if __name__ == "__main__":
     # Đặt recreate_db=True nếu muốn xóa làm mới dữ liệu từ đầu

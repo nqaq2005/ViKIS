@@ -1,23 +1,22 @@
-# ==========================================
 # KẾT NỐI QDRANT
-# ==========================================
-connection:
-  url: "https://8df110ba-d9ff-4a31-8f1d-09eeacaec0d9.us-central1-0.gcp.cloud.qdrant.io"
-  api_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6YTBiNDU3YzMtYmJhZS00NGY1LTkwZTgtNWI0MzYwZjE2MTlhIn0.kpdV3zINDlrmznpIO3yfK9NMsB-7cTN90mVgQ3rkQaA"
-  timeout: 60
 
-# ==========================================
+# connection:
+#   url: "https://8df110ba-d9ff-4a31-8f1d-09eeacaec0d9.us-central1-0.gcp.cloud.qdrant.io"
+#   api_key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIiwic3ViamVjdCI6ImFwaS1rZXk6YTBiNDU3YzMtYmJhZS00NGY1LTkwZTgtNWI0MzYwZjE2MTlhIn0.kpdV3zINDlrmznpIO3yfK9NMsB-7cTN90mVgQ3rkQaA"
+#   timeout: 60
+
+
 # CẤU HÌNH INDEXING HNSW CHUNG
-# ==========================================
+
 hnsw_config:
   m: 16
   ef_construct: 100
   full_scan_threshold: 1000
   on_disk: false
 
-# ==========================================
+
 # SCHEMAS 2 COLLECTIONS
-# ==========================================
+
 collections:
   # 1. Collection quản lý Keyframes & Thị giác
   visual_keyframes:

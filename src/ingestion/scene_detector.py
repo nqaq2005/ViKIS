@@ -84,12 +84,3 @@ class SceneDetector:
                 )
 
         return [asdict(shot) for shot in shots]
-
-if __name__ == "__main__":
-    detector = SceneDetector()
-    test_video = "data/raw_videos/sample.mp4"
-    if os.path.exists(test_video):
-        results = detector.detect_scenes(test_video)
-        print(f"Phát hiện {len(results)} scenes:")
-        for r in results[:3]:
-            print(r)

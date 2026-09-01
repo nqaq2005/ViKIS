@@ -1,6 +1,5 @@
-# ==========================================
 # CẤU HÌNH ĐƯỜNG DẪN HỆ THỐNG
-# ==========================================
+
 paths:
   raw_videos_dir: "data/raw_videos"
   keyframes_dir: "data/keyframes"
@@ -8,18 +7,18 @@ paths:
   ocr_cache_dir: "data/ocr_cache"
   logs_dir: "logs"
 
-# ==========================================
+
 # CẤU HÌNH PHẦN CỨNG & TIẾN TRÌNH
-# ==========================================
+
 system:
   device: "cuda"              # "cuda" hoặc "cpu"
   num_workers: 4              # Số tiến trình worker cho Ingestion (Multiprocessing)
   batch_size: 16              # Batch size chung khi xử lý
-  random_seed: 42
+  random_seed: 113
 
-# ==========================================
+
 # CẤU HÌNH TIỀN XỬ LÝ VIDEO & KEYFRAME
-# ==========================================
+
 ingestion:
   scene_detection:
     adaptive_threshold: 3.0   # Ngưỡng nhạy cảm chuyển cảnh của PySceneDetect
@@ -38,19 +37,18 @@ ingestion:
     enabled: true
     min_confidence: 0.5       # Độ tin cậy tối thiểu để giữ lại từ ngữ nhận diện
 
-# ==========================================
+
 # CẤU HÌNH TRUY XUẤT & TỔNG HỢP (RETRIEVAL)
-# ==========================================
+
 retrieval:
-  top_k_visual: 20            # Số keyframe lấy về từ visual_keyframes
-  top_k_transcript: 20        # Số đoạn thoại lấy về từ transcript_segments
+  top_k_visual: 60            # Số keyframe lấy về từ visual_keyframes
+  top_k_transcript: 60        # Số đoạn thoại lấy về từ transcript_segments
   temporal_window_margin: 3.0 # Độ trễ cho phép khi so khớp Visual và Audio (giây)
   rrf_k: 60                   # Hằng số chuẩn hóa Reciprocal Rank Fusion
   coarse_to_fine:
     enabled: true
     expansion_window_sec: 10.0 # Mở rộng vùng tìm kiếm để giải mã On-the-fly
     dense_fps: 10.0            # Tốc độ quét frame chi tiết trong RAM
-
 
 
 reranker:

@@ -10,10 +10,9 @@ class VideoKISQdrantClient:
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
 
-        conn_cfg = self.config.get("connection", {})
-        self.url = os.getenv("QDRANT_URL", conn_cfg.get("url", "http://localhost:6333"))
-        self.api_key = os.getenv("QDRANT_API_KEY", conn_cfg.get("api_key", None))
-        self.timeout = conn_cfg.get("timeout", 30)
+        self.url = os.getenv("QDRANT_URL", "http://localhost:6333")
+        self.api_key = os.getenv("QDRANT_API_KEY", None)
+        self.timeout = int(os.getenv("QDRANT_TIMEOUT", 30))
 
         # Khởi tạo kết nối Qdrant
         self.client = QdrantClient(

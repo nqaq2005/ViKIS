@@ -34,9 +34,8 @@ class VideoKISRetriever:
         self.transcript_col = collections_cfg.get("transcript_segments", {}).get("name", "transcript_segments")
 
         # 2. Khởi tạo Qdrant Client
-        conn_cfg = self.qdrant_cfg.get("connection", {})
-        self.qdrant_url = os.getenv("QDRANT_URL", conn_cfg.get("url", "http://localhost:6333"))
-        self.qdrant_api_key = os.getenv("QDRANT_API_KEY", conn_cfg.get("api_key", None))
+        self.qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+        self.qdrant_api_key = os.getenv("QDRANT_API_KEY", None)
         
         self.client = QdrantClient(url=self.qdrant_url, api_key=self.qdrant_api_key)
 
