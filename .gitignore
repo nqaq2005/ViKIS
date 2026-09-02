@@ -220,11 +220,11 @@ __marimo__/
 
 # Project-specific local data and generated artifacts
 # Raw media, extracted frames, transcripts, OCR cache, logs
-# /data/raw_videos/
-# /data/keyframes/
-# /data/transcripts/
-# /data/ocr_cache/
-# /logs/
+/data/raw_videos/
+/data/keyframes/
+/data/transcripts/
+/data/ocr_cache/
+/logs/
 
 # Local environment variables and secrets
 .env
