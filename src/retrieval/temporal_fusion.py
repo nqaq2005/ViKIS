@@ -152,25 +152,3 @@ class TemporalFusion:
         return final_events
 
 
-if __name__ == "__main__":
-    # Mô phỏng dữ liệu test thuật toán
-    mock_visual = [
-        {"video_id": "vid_01", "timestamp": 12.5, "score": 0.85, "frame_path": "shot1.jpg"},
-        {"video_id": "vid_01", "timestamp": 45.0, "score": 0.70, "frame_path": "shot2.jpg"}
-    ]
-    
-    mock_transcript = [
-        {"video_id": "vid_01", "start_time": 10.0, "end_time": 14.2, "score": 0.90, "text": "doanh thu tăng"},
-        {"video_id": "vid_02", "start_time": 5.0, "end_time": 8.0, "score": 0.88, "text": "báo cáo tài chính"}
-    ]
-    
-    fuser = TemporalFusion()
-    fused_results = fuser.fuse(mock_visual, mock_transcript)
-    
-    print("KẾT QUẢ SAU KHI HỢP NHẤT:")
-    for i, event in enumerate(fused_results, start=1):
-        print(f"\nTop {i} | Video: {event['video_id']} | Time: [{event['start_time']}s - {event['end_time']}s]")
-        print(f"   Match Type: {event['match_type']}")
-        print(f"   Score: {event['combined_score']:.5f}")
-        if event['transcript_info']:
-            print(f"   Text: {event['transcript_info']['text']}")

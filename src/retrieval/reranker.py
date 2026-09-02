@@ -67,23 +67,3 @@ class TextReranker:
             
         return reranked_hits
 
-if __name__ == "__main__":
-    # Test mô phỏng
-    reranker = TextReranker()
-    q = "kế hoạch doanh thu quý 3"
-    
-    mock_hits = [
-        {"video_id": "vid_01", "text": "hôm nay chúng ta sẽ bàn về thời tiết", "score": 0.5},
-        {"video_id": "vid_02", "text": "báo cáo tài chính cho thấy doanh thu tăng trưởng", "score": 0.6},
-        {"video_id": "vid_03", "text": "mục tiêu doanh số trong quý 3 là 500 tỷ", "score": 0.4} # Qdrant có thể nhầm và cho điểm thấp
-    ]
-    
-    print("\n--- TRƯỚC KHI RERANK ---")
-    for r in mock_hits:
-        print(f"[{r['video_id']}] Score: {r['score']} | {r['text']}")
-        
-    reranked = reranker.rerank_transcripts(q, mock_hits)
-    
-    print("\n--- SAU KHI RERANK (Cross-Encoder) ---")
-    for r in reranked:
-        print(f"[{r['video_id']}] Rerank Score: {r['score']:.4f} | {r['text']}")

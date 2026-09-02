@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Mapping
 from FlagEmbedding import BGEM3FlagModel
 from src.utils.fix_bug_FlagEmbedding import fix_bug_FlagEmbedding
 
-fix_bug_FlagEmbedding()
+fix_bug_FlagEmbedding() # bug của thư viện 
   
 class TextEncoder:
     def __init__(self, models_config_path: str = "configs/models_config.yaml"):

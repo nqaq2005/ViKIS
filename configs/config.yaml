@@ -41,8 +41,6 @@ ingestion:
 # CẤU HÌNH TRUY XUẤT & TỔNG HỢP (RETRIEVAL)
 
 retrieval:
-  top_k_visual: 60            # Số keyframe lấy về từ visual_keyframes
-  top_k_transcript: 60        # Số đoạn thoại lấy về từ transcript_segments
   temporal_window_margin: 3.0 # Độ trễ cho phép khi so khớp Visual và Audio (giây)
   rrf_k: 60                   # Hằng số chuẩn hóa Reciprocal Rank Fusion
   coarse_to_fine:

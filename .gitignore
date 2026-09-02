@@ -216,3 +216,57 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.streamlit/
+
+# Project-specific local data and generated artifacts
+# Raw media, extracted frames, transcripts, OCR cache, logs
+# /data/raw_videos/
+# /data/keyframes/
+# /data/transcripts/
+# /data/ocr_cache/
+# /logs/
+
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+
+# Model / embedding / vector cache
+*.bin
+*.safetensors
+*.pt
+*.ckpt
+huggingface/
+.cache/
+\.cache/
+model_cache/
+checkpoints/
+qdrant_storage/
+vectorstore/
+
+# Editor / workspace metadata
+.vscode/
+.idea/
+.agents/
+.claude/
+.schema
+
+# OS / temp files
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.log
+
+# Jupyter / Python runtime artifacts
+.ipynb_checkpoints/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/

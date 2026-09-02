@@ -14,7 +14,7 @@ from decord import VideoReader, cpu
 
 
 def get_fast_middle_frame(video_id: str, start_sec: float, end_sec: float, raw_dir: str = "data/raw_videos"):
-    """Lấy nhanh 1 khung hình ở giữa đoạn audio để làm thumbnail, không qua AI."""
+    """Lấy nhanh 1 khung hình ở giữa đoạn audio để làm thumbnail."""
     extensions = [".mp4", ".mkv", ".avi", ".webm"]
     video_path = None
     for ext in extensions:

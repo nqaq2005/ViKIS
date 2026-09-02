@@ -48,7 +48,6 @@ class VideoKISRetriever:
         """
         Tìm kiếm khung hình video bằng câu truy vấn văn bản (Text-to-Image).
         """
-        k = retrieve_top_k 
         # Mã hóa câu hỏi tiếng Việt sang không gian hình ảnh 1024d
         query_vector = self.visual_encoder.encode_text_query(query_text)
 
@@ -56,7 +55,7 @@ class VideoKISRetriever:
         response = self.client.query_points(
             collection_name=self.visual_col,
             query=query_vector,          # đổi từ query_vector -> query
-            limit=k,
+            limit=retrieve_top_k,
             with_payload=True
         )
 
@@ -80,7 +79,6 @@ class VideoKISRetriever:
         """
         Tìm kiếm lời thoại video bằng Hybrid Search (Dense + Sparse SPLADE).
         """
-        k = retrieve_top_k 
         
         # Mã hóa câu hỏi sang Dense (Semantic) và Sparse (Lexical/Keyword)
         query_vectors = self.text_encoder.encode_query(query_text)
@@ -90,7 +88,7 @@ class VideoKISRetriever:
             models.Prefetch(
                 query=query_vectors["dense"],
                 using="dense",
-                limit=k
+                limit=retrieve_top_k
             ),
             models.Prefetch(
                 query=models.SparseVector(
@@ -98,7 +96,7 @@ class VideoKISRetriever:
                     values=query_vectors["sparse"]["values"]
                 ),
                 using="sparse",
-                limit=k
+                limit=retrieve_top_k
             )
         ]
 
@@ -107,7 +105,7 @@ class VideoKISRetriever:
             collection_name=self.transcript_col,
             prefetch=prefetch_queries,
             query=models.FusionQuery(fusion=models.Fusion.RRF),
-            limit=k,
+            limit=retrieve_top_k,
             with_payload=True
         )
 
@@ -129,7 +127,7 @@ class VideoKISRetriever:
             formatted_results = self.reranker.rerank_transcripts(
                 query=query_text, 
                 hits=formatted_results, 
-                top_k=k
+                top_k=retrieve_top_k
             )
             
         return formatted_results
@@ -147,15 +145,3 @@ class VideoKISRetriever:
         }
 
 
-if __name__ == "__main__":
-    retriever = VideoKISRetriever()
-    test_q = "kế hoạch doanh thu quý 3"
-    results = retriever.retrieve(test_q)
-    
-    print("\n--- TOP 3 VISUAL HITS ---")
-    for r in results["visual"][:3]:
-        print(f"[{r['video_id']} - {r['timestamp']}s] Score: {r['score']:.4f}")
-        
-    print("\n--- TOP 3 TRANSCRIPT HITS ---")
-    for r in results["transcript"][:3]:
-        print(f"[{r['video_id']} - {r['start_time']}s] Score: {r['score']:.4f} | Text: {r['text'][:50]}...")
