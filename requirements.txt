@@ -15,9 +15,7 @@ tqdm==4.67.3
 einops
 sentencepiece
 python-dotenv
-streamlit==1.62.0
-fastapi
-uvicorn
+streamlit
 
 # phải pin version tránh lỗi model "jinaai/jina-clip-v2"
 huggingface-hub==0.25.2
