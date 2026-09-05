@@ -8,7 +8,7 @@
 - **Pipeline nạp dữ liệu tự động:** phân đoạn cảnh (scene detection), trích xuất keyframe chất lượng cao, nhận dạng giọng nói tiếng Việt (ASR), và nhận dạng văn bản trong khung hình (OCR).
 - **Tinh chỉnh kết quả theo thời gian:** hợp nhất kết quả visual và transcript theo cửa sổ thời gian (temporal fusion), loại bỏ trùng lặp bằng Non-Maximum Suppression (NMS), và quét mịn lại (coarse-to-fine decoding) để xác định thời điểm chính xác.
 - **Tái xếp hạng bằng Cross-Encoder:** nâng cao độ chính xác kết quả văn bản với mô hình reranker chuyên biệt.
-- **Giao diện web & API:** ứng dụng minh họa bằng Streamlit và backend API bằng FastAPI.
+- **Giao diện web** ứng dụng minh họa bằng Streamlit.
 
 ## Kiến trúc hệ thống
 
@@ -52,7 +52,6 @@ Kết quả: video, khung hình, [t_start, t_end], trích dẫn bằng chứng
 | Nhận dạng văn bản (OCR) | EasyOCR (`vi`, `en`) |
 | Phân đoạn cảnh | PySceneDetect (Adaptive Detector) |
 | Vector Database | Qdrant |
-| Backend API | FastAPI |
 | Giao diện minh họa | Streamlit |
 
 
@@ -110,17 +109,6 @@ Pipeline sẽ tự động phân đoạn cảnh, trích xuất keyframe, chạy 
 streamlit run app/streamlit_app.py
 ```
 
-### 3. Khởi chạy API backend
-
-```bash
-uvicorn app.api:app --reload
-```
-
-### 4. Đánh giá hệ thống
-
-```bash
-python scripts/evaluate_kis.py
-```
 
 ## Giấy phép
 
